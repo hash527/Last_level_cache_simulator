@@ -1,5 +1,4 @@
 
-
 `define NOHIT 0
 `define HIT 1
 `define HITM 2
@@ -17,10 +16,10 @@
 `define EVICTLINE 4 
 
 
-`define I 00
-`define E 01
-`define M 10
-`define S 11
+`define I 2'b00
+`define E 2'b01
+`define M 2'b10
+`define S 2'b11
 
 
 module cache_design;
@@ -33,7 +32,7 @@ localparam int PLRU_BITS = 15;
 
 typedef struct packed {
   bit [1:0]MESI;           
-  bit [INDEX_BITS-1:0] tag;
+  bit [INDEX_BITS-3:0] tag;
 } cache_entry_t;
 
 
@@ -98,30 +97,35 @@ initial begin
     end
 
 
-    while (!$feof(file)) begin
+    while (!$feof(file)) 
+     begin
       status = $fscanf(file, "%d %h\n", id, Address); 
-      if (status == 2) begin
+      if (status == 2) 
+      begin
         `ifdef DEBUG
         //input_index=Address[19:6];
         //input_tag=Address[31:0];
         sample(id,Address  );
         `endif
       end
-end
+     end
 
- $display("cache_reads = %0d cache_hits = %0d cache_misses = %0d",cache_reads,cache_hits,cache_misses);
+$display("cache_reads = %0d cache_hits = %0d cache_misses = %0d",cache_reads,cache_hits,cache_misses);
 
     $fclose(file);
   end
 
+
   function automatic void Update_PLRU(ref bit [14:0]PLRU, bit [3:0]way);
     int index=0;
-    for (int i = 3; i >=0; i--) begin
+    for (int i = 3; i >=0; i--)
+     begin
       if (way[i] == 0) begin
         PLRU[index] = way[i];
         index = 2 * index + 1;        
       end 
-      else begin
+      else 
+      begin
         PLRU[index] = way[i];                 
         index = 2 * index + 2;        
       end
@@ -184,7 +188,6 @@ end
   
   
           
-  
   function automatic void sample(int id, bit [31:0] Address);
     case (id)
       0,2 : PrRd(Address);
@@ -202,18 +205,18 @@ end
   
   
   function automatic void PrRd(bit [31:0] Address);
-    int bool_a,valid_count; 
-    bit [3:0] empty_way; 
+    bit bool_a;
+    int valid_count; 
     input_index = Address[19:6];
     input_tag = Address [31:20];
        cache_reads+=1;
-    $display("input_index=%b tag=%b",input_index,input_tag);
+    $display("input_index=%h tag=%h",input_index,input_tag);
     for(int j=0; j<16; j=j+1)
+  
          begin
-            if(cache [input_index][j].MESI==`M||cache [input_index][j].MESI==`S||cache [input_index][j].MESI==`E)
               begin
+                 if(cache[input_index][j].MESI==`S || cache[input_index][j].MESI==`E || cache[input_index][j].MESI==`M)
                  valid_count+=1;
-          
                  if(cache[input_index][j].tag==input_tag)
                    begin
                     cache_hits+=1;
@@ -223,22 +226,30 @@ end
                     break;
                    end
               end
-           else
-             	empty_way = j;
+
 
          end
+ $display("valid_count=%0d",valid_count);
                   if(bool_a==0 && valid_count!=16)
-                  	
-                    begin 
+                    begin
                       cache_misses+=1;
-                      SnoopResult = GetSnoopResult(Address);
-                      if(SnoopResult==`HIT)
-                        cache [input_index][empty_way].MESI=`S;
-                      else
-                      	cache [input_index][empty_way].MESI=`E;  
-                      Update_PLRU(PLRU[input_index],ways_seq[empty_way]);
-                      cache [input_index][empty_way].tag=input_tag;
+                      for(int i=0;i<16;i++)
+                         begin
+                          if(cache [input_index][i].MESI==`I)
+                                begin
+
+                                 SnoopResult = GetSnoopResult(Address);
+                                 if(SnoopResult==`HIT)
+                                        cache [input_index][i].MESI=`S;
+                                 else
+                      	            cache [input_index][i].MESI=`E;  
+                      Update_PLRU(PLRU[input_index],ways_seq[i]);
+                      cache [input_index][i].tag=input_tag;
                       MessageToCache(`SENDLINE,Address);
+                      break;
+                         end
+                     
+                      end
                             
                     end
     
@@ -254,10 +265,10 @@ end
                          cache [input_index][WayToEvict].tag=input_tag;
                          MessageToCache(`SENDLINE,Address);
                          cache_misses+=1;
-                       end  
+                        end
+    for(int i=0;i<16;i++)
+    begin
+     $display("tag=%h",cache[input_index][i].tag);
+    end
     endfunction
-endmodule
-
-              
-               
-           
+endmodule          
