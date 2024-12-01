@@ -103,7 +103,6 @@ initial begin
       end
 end
     $display("cache_reads = %0d cache_writes =%0d cache_hits = %0d cache_misses = %0d",cache_reads,cache_writes,cache_hits,cache_misses);
-    $display("PLRU",PLRU);
     $fclose(file);
   end
   
@@ -206,7 +205,7 @@ function automatic void PrRd(bit [31:0] Address);
                  if(cache[input_index][j].tag==input_tag)
                    begin
                     cache_hits+=1;
-                    MessageToCache(`SENDLINE,Address);
+                    // MessageToCache(`SENDLINE,Address);
                     Update_PLRU(PLRU[input_index],ways_seq[j]);
                     bool_a=1;
                     break;
@@ -228,7 +227,7 @@ function automatic void PrRd(bit [31:0] Address);
                             cache [input_index][i].MESI=`E;  
             Update_PLRU(PLRU[input_index],ways_seq[i]);
             cache [input_index][i].tag=input_tag;
-            MessageToCache(`SENDLINE,Address);
+            // MessageToCache(`SENDLINE,Address);
             break;
                 end
             
@@ -236,7 +235,7 @@ function automatic void PrRd(bit [31:0] Address);
                 
         end
     
-        if( valid_count==16)
+        if(bool_a==0 && valid_count==16)
         begin
             bit [3:0]WayToEvict;
             WayToEvict=victim_cache(PLRU[input_index]);
@@ -246,7 +245,7 @@ function automatic void PrRd(bit [31:0] Address);
             else
                     cache [input_index][WayToEvict].MESI=`E; 
             cache [input_index][WayToEvict].tag=input_tag;
-            MessageToCache(`SENDLINE,Address);
+            // MessageToCache(`SENDLINE,Address);
             cache_misses+=1;
         end
 
@@ -262,17 +261,19 @@ cache_writes+=1;
 
 for(int j=0; j<16; j=j+1)
     begin
+  $display("MESI:%d tag = %d",cache[input_index][j].MESI,cache[input_index][j].MESI);
+
         if(cache[input_index][j].MESI==`S || cache[input_index][j].MESI==`E || cache[input_index][j].MESI==`M)
             begin
                 valid_count+=1;
                 if(cache[input_index][j].tag==input_tag)
                 begin
                 cache_hits+=1;
-                MessageToCache(`SENDLINE,Address);
+                // MessageToCache(`SENDLINE,Address);
                 if(cache[input_index][j].MESI==`S)
                     begin
                     cache[input_index][j].MESI= `M;
-                    BusOperation(`HITM,Address,`INVALIDATE);
+                    BusOperation(`HIT,Address,`INVALIDATE);
                     end    
                 if(cache[input_index][j].MESI==`E)
                     begin
@@ -294,20 +295,20 @@ if(flag==0 && valid_count!=16)
                     cache [input_index][i].MESI=`M;  
                     Update_PLRU(PLRU[input_index],ways_seq[i]);
                     cache [input_index][i].tag=input_tag;
-                    MessageToCache(`SENDLINE,Address);
+                    // MessageToCache(`SENDLINE,Address);
                     break;
                 end
         end
             
 end
 
-if( valid_count==16)
+if(flag==0 && valid_count==16)
             begin
                 bit [3:0]WayToEvict;
                 WayToEvict=victim_cache(PLRU[input_index]);
                 cache [input_index][WayToEvict].MESI=`M; 
                 cache [input_index][WayToEvict].tag=input_tag;
-                MessageToCache(`SENDLINE,Address);
+                // MessageToCache(`SENDLINE,Address);
                 cache_misses+=1;
             end            
 
