@@ -458,7 +458,6 @@ endfunction
       endfunction
        
 
-
     function string MESI_to_string(bit [1:0] MESI);
     case (MESI)
         `I: return "I";  
