@@ -91,9 +91,9 @@ initial begin
 
     if ( $value$plusargs ("MODE=%d", mode)) begin
         if(mode==1)
-             $display("RUNNING ON NORMAL MODE");
+             $display("RUNNING IN NORMAL MODE");
         else
-           $display("RUNNING ON SILENT MODE");
+           $display("RUNNING IN SILENT MODE");
     end
     else begin
        $display("No Mode Specified. Using Default Mode as SILENT MODE");
@@ -220,7 +220,7 @@ end
 
   function automatic void MessageToCache(int Message, bit [31:0] Address);
    if(mode==`NormalMode)
-    $display("L2: %s %0h\n", CacheMessage_to_string(Message), Address);
+    $display("Message to Higher Level Cache: %s %0h\n", CacheMessage_to_string(Message), Address);
   endfunction
   
   
@@ -253,7 +253,8 @@ end
     cache_reads+=1;
 
     /////////CHECK FOR HIT/////////////
-    $display("OPERATION: PROCESSOR READ");
+    if(mode==`NormalMode)
+       $display("OPERATION: PROCESSOR READ");
     for(int j=0; j<WAYS; j=j+1)
          begin
                  if(cache[input_index][j].MESI!=`I) 
@@ -262,8 +263,10 @@ end
                          if(cache[input_index][j].tag==input_tag)
                               begin
                                 cache_hits+=1;
-                                $display("HIT/MISS: CACHE HIT");
-                                $display("MESI State:%b, TAG:%h",MESI_to_string(cache[input_index][j].MESI),cache[input_index][j].tag);
+                                if(mode==`NormalMode) begin
+                                   $display("HIT/MISS: CACHE HIT");
+                                   $display("MESI State:%b, TAG:%h",MESI_to_string(cache[input_index][j].MESI),cache[input_index][j].tag);
+                                end
                                 MessageToCache(`SENDLINE,Address);
                                 Update_PLRU(PLRU[input_index],ways_seq[j]);
                                 bool_a=1;
@@ -276,7 +279,8 @@ end
       if(bool_a==0 && valid_count!=WAYS)
         begin
           cache_misses+=1;
-          $display("HIT/MISS: CACHE MISS");
+          if(mode==`NormalMode)
+               $display("HIT/MISS: CACHE MISS");
           for(int i=0;i<WAYS;i++) begin
 
             if(cache [input_index][i].MESI==`I)
@@ -289,7 +293,8 @@ end
                   cache [input_index][i].MESI=`E;
                 else
                   cache [input_index][i].MESI=`S;
-                $display("MESI State:%b, TAG:%h",MESI_to_string(cache[input_index][i].MESI),cache[input_index][i].tag);
+                if(mode==`NormalMode)
+                    $display("MESI State:%b, TAG:%h",MESI_to_string(cache[input_index][i].MESI),cache[input_index][i].tag);
                 Update_PLRU(PLRU[input_index],ways_seq[i]);
                 cache [input_index][i].tag=input_tag;
                 MessageToCache(`SENDLINE,Address);
@@ -304,7 +309,8 @@ end
         begin
           bit [3:0]WayToEvict;
           cache_misses+=1;
-          $display("HIT/MISS: CACHE MISS");
+          if(mode==`NormalMode)
+              $display("HIT/MISS: CACHE MISS");
           WayToEvict=victim_cache(PLRU[input_index]);
           MessageToCache(`EVICTLINE,Address);
           SnoopResult=GetSnoopResult(Address);
@@ -314,12 +320,13 @@ end
             cache [input_index][WayToEvict].MESI=`S; 
           else
             cache [input_index][WayToEvict].MESI=`E; 
-          $display("MESI State:%b, TAG:%h",MESI_to_string(cache[input_index][WayToEvict].MESI),cache[input_index][WayToEvict].tag);
+          if(mode==`NormalMode)
+             $display("MESI State:%b, TAG:%h",MESI_to_string(cache[input_index][WayToEvict].MESI),cache[input_index][WayToEvict].tag);
           cache [input_index][WayToEvict].tag=input_tag;
           MessageToCache(`SENDLINE,Address);
         end
-      
-      $display("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+      if(mode==`NormalMode)
+         $display("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
     endfunction
 
 
@@ -337,7 +344,8 @@ end
     cache_writes+=1;
 
       /////////CHECK FOR HIT///////////
-      $display("OPERATION: PROCESSOR WRITE");
+      if(mode==`NormalMode)
+          $display("OPERATION: PROCESSOR WRITE");
       for(int j=0; j<WAYS; j=j+1)
           begin
               if(cache[input_index][j].MESI!=`I)
@@ -347,14 +355,16 @@ end
                       begin
 
                       cache_hits+=1;
-                      $display("HIT/MISS: CACHE HIT");
+                      if(mode==`NormalMode)
+                         $display("HIT/MISS: CACHE HIT");
                       MessageToCache(`SENDLINE,Address);
 
                       if(cache[input_index][j].MESI==`S)
                           BusOperation(`INVALIDATE,Address,SnoopResult);
 
                       cache[input_index][j].MESI= `M; 
-                      $display("MESI State:%b, TAG:%h",MESI_to_string(cache[input_index][j].MESI),cache[input_index][j].tag);                        
+                      if(mode==`NormalMode)
+                         $display("MESI State:%b, TAG:%h",MESI_to_string(cache[input_index][j].MESI),cache[input_index][j].tag);                        
                       Update_PLRU(PLRU[input_index],ways_seq[j]);
                       flag=1;
                       break;
@@ -368,13 +378,15 @@ end
       if(flag==0 && valid_count!=WAYS)
           begin
               cache_misses+=1;
-              $display("HIT/MISS: CACHE MISS");
+              if(mode==`NormalMode)
+                 $display("HIT/MISS: CACHE MISS");
               for(int i=0;i<WAYS;i++) begin
                   if(cache [input_index][i].MESI==`I)
                       begin
                           BusOperation(`RWIM,Address,SnoopResult);
-                          cache [input_index][i].MESI=`M; 
-                          $display("MESI State:%b, TAG:%h",MESI_to_string(cache[input_index][i].MESI),cache[input_index][i].tag); 
+                          cache [input_index][i].MESI=`M;
+                          if(mode==`NormalMode) 
+                                 $display("MESI State:%b, TAG:%h",MESI_to_string(cache[input_index][i].MESI),cache[input_index][i].tag); 
                           Update_PLRU(PLRU[input_index],ways_seq[i]);
                           cache [input_index][i].tag=input_tag;
                           MessageToCache(`SENDLINE,Address);
@@ -391,16 +403,19 @@ end
         begin
           bit [3:0]WayToEvict;
           cache_misses+=1;
-          $display("HIT/MISS: CACHE MISS");
+          if(mode==`NormalMode)
+              $display("HIT/MISS: CACHE MISS");
           WayToEvict=victim_cache(PLRU[input_index]);
           MessageToCache(`EVICTLINE,Address);
           BusOperation(`RWIM,Address,SnoopResult);
           cache [input_index][WayToEvict].MESI=`M; 
-          $display("MESI State:%b, TAG:%h",MESI_to_string(cache[input_index][WayToEvict].MESI),cache[input_index][WayToEvict].tag);
+          if(mode==`NormalMode)
+              $display("MESI State:%b, TAG:%h",MESI_to_string(cache[input_index][WayToEvict].MESI),cache[input_index][WayToEvict].tag);
           cache [input_index][WayToEvict].tag=input_tag;
           MessageToCache(`SENDLINE,Address);
-        end            
-        $display("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+        end   
+        if(mode==`NormalMode)         
+          $display("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
    endfunction
 
 
