@@ -50,16 +50,16 @@ cache_entry_t cache [SETS][WAYS];
 
  bit [$clog2(WAYS)-1:0] ways_seq[WAYS-1:0];
 initial begin
-    ways_seq[0] = 4'b0000;
-    ways_seq[1] = 4'b0001;
-    ways_seq[2] = 4'b0010;
-    ways_seq[3] = 4'b0011;
-    ways_seq[4] = 4'b0100;
-    ways_seq[5] = 4'b0101;
-    ways_seq[6] = 4'b0110;
-    ways_seq[7] = 4'b0111;
-    ways_seq[8] = 4'b1000;
-    ways_seq[9] = 4'b1001;
+    ways_seq[0]  = 4'b0000;
+    ways_seq[1]  = 4'b0001;
+    ways_seq[2]  = 4'b0010;
+    ways_seq[3]  = 4'b0011;
+    ways_seq[4]  = 4'b0100;
+    ways_seq[5]  = 4'b0101;
+    ways_seq[6]  = 4'b0110;
+    ways_seq[7]  = 4'b0111;
+    ways_seq[8]  = 4'b1000;
+    ways_seq[9]  = 4'b1001;
     ways_seq[10] = 4'b1010;
     ways_seq[11] = 4'b1011;
     ways_seq[12] = 4'b1100;
@@ -211,7 +211,7 @@ end
 
   function automatic void PutSnoopResult(bit [31:0] Address, int SnoopResult);
     if(mode==`NormalMode)
-      $display("SnoopResult: Address %h, SnoopResult: %0d\n", Address, SnoopResult);
+      $display("SnoopResult: Address %h, SnoopResult: %0d\n", Address, Snoop_to_string(SnoopResult));
   endfunction
   
 
@@ -220,7 +220,7 @@ end
 
   function automatic void MessageToCache(int Message, bit [31:0] Address);
    if(mode==`NormalMode)
-    $display("Message to Higher Level Cache: %s %0h\n", CacheMessage_to_string(Message), Address);
+    $display("Message to Higher Level Cache: %s", CacheMessage_to_string(Message));
   endfunction
   
   
@@ -253,6 +253,7 @@ end
     cache_reads+=1;
 
     /////////CHECK FOR HIT/////////////
+
     if(mode==`NormalMode)
        $display("OPERATION: PROCESSOR READ");
     for(int j=0; j<WAYS; j=j+1)
@@ -326,7 +327,8 @@ end
           MessageToCache(`SENDLINE,Address);
         end
       if(mode==`NormalMode)
-         $display("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+         $display("++++++++++++++++++++++++++++++++++++++++++++++++++");
+         $display(" ");
     endfunction
 
 
@@ -415,7 +417,8 @@ end
           MessageToCache(`SENDLINE,Address);
         end   
         if(mode==`NormalMode)         
-          $display("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+          $display("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+          $display(" ");
    endfunction
 
 
@@ -425,11 +428,14 @@ end
 
   function automatic void SnoopedRead(bit [31:0] Address);
      int valid_count=0;
+     bit flag=0;
      input_index = Address[19:6];
      input_tag = Address [31:20];
+     if (mode==`NormalMode)
+           $display("Operation: SNOOPED READ");
      for(int i=0;i<16;i++)
         begin
-          $display("cache[input_index][%0d].MESI:%b", i, cache[input_index][i].MESI);
+
           valid_count+=1;
           if (cache[input_index][i].MESI!=`I && cache[input_index][i].tag==input_tag)
              begin
@@ -437,18 +443,23 @@ end
                    PutSnoopResult(Address, `HIT);
                else
                    PutSnoopResult(Address, `HITM);
-               cache[input_tag][i].MESI=`S;
+               cache[input_index][i].MESI=`S;
+               if(mode==`NormalMode)
+                      $display("MESI:%b", MESI_to_string(cache[input_index][i].MESI));
+               flag=1;
                break;
              end
         end
-     if(valid_count==16)
+     if(flag==0 && valid_count==16)
          PutSnoopResult(Address,`NOHIT);
+     $display("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
   endfunction
 
+   /**************************************SNOOPED WRITE****************************************/
 
- function automatic void SnoopedWrite(bit [31:0]Address);
+   function automatic void SnoopedWrite(bit [31:0]Address);
  
- endfunction
+   endfunction
 
 
   /*********************************************************************************************/
@@ -456,9 +467,12 @@ end
   /*********************************************************************************************/
 
   function automatic void SnoopedRdx(bit [31:0]Address);
+      bit flag=0;
       int valid_count=0;
       input_index = Address[19:6];
       input_tag = Address [31:20];
+      if (mode==`NormalMode)
+           $display("Operation: SNOOPED READ WITH INTENT TO MODIFY");
       for(int i=0;i<16;i++)
         begin
           if (cache[input_index][i].MESI!=`I && cache[input_index][i].tag==input_tag)
@@ -478,15 +492,18 @@ end
 
              MessageToCache(`INVALIDATELINE, Address);
              cache[input_index][i].MESI=`I;
-             $display("cache[input_index][i].MESI=%b",cache[input_index][i].MESI);
+             if(mode==`NormalMode)
+                     $display("MESI:%b", MESI_to_string(cache[input_index][i].MESI));
+             flag=1;
              break;
 
            end
          end
-      if(valid_count==16)
+      if(flag==0 && valid_count==16)
         begin
          PutSnoopResult(Address,`NOHIT);
         end
+      $display("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
   endfunction 
 
 
@@ -496,23 +513,29 @@ end
  
   function automatic void Snooped_Invalidate(bit [31:0]Address);
       int valid_count=0;
+      bit flag=0;
       input_index = Address[19:6];
       input_tag = Address [31:20];
+      if (mode==`NormalMode)
+          $display("Operation: SNOOPED INVALIDATE");
       for(int i=0;i<16;i++)
         begin
+          valid_count+=1;
           if (cache[input_index][i].MESI==`S && cache[input_index][i].tag==input_tag)
            begin
-             valid_count+=1;
              PutSnoopResult(Address,`HIT);
              MessageToCache(`INVALIDATELINE, Address);
              cache[input_index][i].MESI=`I;
+             if(mode==`NormalMode)
+                    $display("MESI:%b", MESI_to_string(cache[input_index][i].MESI));
              break;
            end
         end
-      if(valid_count==16)
+      if(flag==0 && valid_count==16)
         begin
          PutSnoopResult(Address,`NOHIT);
         end
+      $display("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
   endfunction
     
 
@@ -529,16 +552,22 @@ end
 
 
       function automatic void PrintValidCacheLines();
-          $display("MESI   |    TAG    |            SET     |           WAY     |");
+          bit valid;
+          $display("Valid Lines in LLC:");
+          $display("");
+          $display("MESI   |    TAG    |            SET     |        WAY    |        PLRU      |");
           for(int i=0;i<SETS;i++) begin 
                  for(int j=0;j<WAYS;j++) begin           
                        if (cache[i][j].MESI!=`I)begin
-                                 $display("-------------------------------------------------------------");
-                                 $display(" %s     |    %h    |    %d     |  %d      |",MESI_to_string(cache[i][j].MESI), cache[i][j].tag,i,j);
+                                 valid=1;
+                                 $display("----------------------------------------------------------------------------");
+                                 $display(" %s     |    %h    |    %d     |%d    |  %b |",MESI_to_string(cache[i][j].MESI), cache[i][j].tag,i,j,PLRU[i]);
                        end
                            
                  end
           end
+          if(valid==0)
+              $display("No Valid Lines in LLC");
 
       endfunction
        
