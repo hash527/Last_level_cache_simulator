@@ -41,45 +41,45 @@ module cache_design;
   int cache_hit_ratio;
   int SnoopResult;
   int mode;
- 
- 
+
 initial begin
 
-    if ( $value$plusargs ("MODE=%d", mode)) begin
-        if(mode==1)
+    if ($value$plusargs ("MODE=%d", mode)) begin
+        if (mode == 1)
              $display("RUNNING IN NORMAL MODE");
         else
            $display("RUNNING IN SILENT MODE");
-    end
-    else begin
+    end else begin
        $display("No Mode Specified. Using Default Mode as SILENT MODE");
-       mode=0;
+       mode = 0;
     end
+
     if ($value$plusargs("file_name=%s", file_name)) begin
       `ifdef DEBUG
       $display("Using specified file: %s", file_name);
       `endif
-    end
-    else begin
+    end else begin
       file_name = default_file_name;
       `ifdef DEBUG
       $display("No file name specified, using default file: %s", default_file_name);
       `endif
     end
-
-    // Open the file
+   
     file = $fopen(file_name, "r");
     if (file == 0) begin
       $fatal("Error: Could not open file '%s'", file_name);
     end
 
-    // Read file line by line
     while (!$feof(file)) begin
-      status = $fscanf(file, "%d %h", id,Address);
-      if (status != 2) begin
-        break; // Exit if there's an error reading
+      status = $fscanf(file, "%d %h", id, Address);
+      if (status == 2) begin
+        if ($fgetc(file) != "\n") begin
+          $fatal("Error: Line contains more than two arguments. Stopping execution.");
+        end
+      end else if (status < 2) begin
+        break;
       end
-      
+
       case (id)
         0, 2    : ProcessorRead(Address);
         1       : ProcessorWrite(Address);        
@@ -97,13 +97,15 @@ initial begin
 
     $display("CacheWrites = %0d", cache_writes);
    
-    $display("CacheHits=%0d",cache_hits);
+    $display("CacheHits = %0d",cache_hits);
    
-    $display("CacheMisses=%0d",cache_misses);
+    $display("CacheMisses = %0d",cache_misses);
    
-    $display("Hit Ratio:%.2f",real'(cache_hits)/(real'(cache_reads)+real'(cache_writes)));
+    $display("Hit Ratio: %.2f", real'(cache_hits) / (real'(cache_reads) + real'(cache_writes)));
     $fclose(file);
 end
+ 
+ 
 
   ////////UPDATING LRU//////////
   function automatic void Update_PLRU(ref bit [14:0]PLRU, bit [3:0]way);
