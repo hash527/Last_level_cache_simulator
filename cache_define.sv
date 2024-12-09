@@ -1,6 +1,6 @@
 package cache_define;
 
-parameter SILENT_MODE = 0, NORMAL_MODE = 1;
+parameter SilentMode = 0, NormalMode = 1;
 
 //Snoop Results of other caches
 parameter NOHIT = 2'b11;
