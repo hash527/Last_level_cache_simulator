@@ -12,9 +12,7 @@ package UpdatePlru;
         index = 2 * index + 2;        
       end
     end
-    `ifdef DEBUG
       if(mode==NormalMode)
         $display("PLRU = %b",PLRU);
-    `endif
   endfunction
 endpackage
