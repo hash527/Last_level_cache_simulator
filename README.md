@@ -6,7 +6,9 @@ Key Features:
 
 Cache Configuration:
 
-Total Capacity: 16MB Line Size: 64 bytes Associativity: 16-way set associative Write Policies:
+Total Capacity: 16MB Line Size: 64 bytes Associativity: 16-way set associative
+
+Write Policies:
 
 Write Allocate: The cache allocates space for a line on a write miss before updating it. Write-Back: Subsequent writes to the same line are kept in the cache until the line is evicted.
 
