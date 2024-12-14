@@ -1,6 +1,5 @@
 package cache_define;
-
-parameter SilentMode = 0, NormalMode = 1;
+parameter SilentMode = 0 , NormalMode = 1;
 
 //Snoop Results of other caches
 parameter NOHIT = 2'b11;
@@ -35,13 +34,33 @@ parameter OFFSET_BITS =  $clog2(CACHE_LINE_SIZE);
 parameter SETS = CACHE_SIZE /(CACHE_LINE_SIZE*WAYS);          
 parameter INDEX_BITS = $clog2(SETS);
 parameter PLRU_BITS = WAYS-1;
+parameter MESIBITS = 2;
 
 typedef struct packed {
-  bit [1:0]MESI;          
+  bit [MESIBITS-1:0]MESI;          
   bit [INDEX_BITS-3:0] tag;
 } cache_entry_t;
 
-function string MESI_to_string(bit [1:0] MESI);
+  cache_entry_t cache [SETS][WAYS];
+  bit [PLRU_BITS-1:0] PLRU [SETS-1:0];
+  string file_name;
+  int file;
+  int id;
+  bit [ADDRESS_WIDTH-1:0] Address;
+  bit [INDEX_BITS+OFFSET_BITS-1:OFFSET_BITS] input_index;
+  bit [ADDRESS_WIDTH-1:INDEX_BITS+OFFSET_BITS] input_tag;
+  int status;
+  string default_file_name = "rims.din";
+  string line;
+  int cache_reads;
+  int cache_writes;
+  int cache_hits;
+  int cache_misses;
+  int cache_hit_ratio;
+  int SnoopResult;
+  int mode;
+
+  function string MESI_to_string(bit [1:0] MESI);
     case (MESI)
         I: return "I";  
         E: return "E";
@@ -79,11 +98,10 @@ function string MESI_to_string(bit [1:0] MESI);
         EVICTLINE          : return "EVICTLINE";
          default            : return "Unknown";
     endcase
-   endfunction
+   endfunction  
 
-
-// typedef enum [1:0]{READ, WRITE, INVALIDATE, RWIM} Bus_Ops;
-// typedef enum [1:0]{NOHIT, HIT, HITM} Snoop_Results;
-// typedef enum [1:0]{GETLINE, SENDLINE, INVALIDATELINE, EVICTLINE} L2_to_L1;
+// // typedef enum [1:0]{READ, WRITE, INVALIDATE, RWIM} Bus_Ops;
+// // typedef enum [1:0]{NOHIT, HIT, HITM} Snoop_Results;
+// // typedef enum [1:0]{GETLINE, SENDLINE, INVALIDATELINE, EVICTLINE} L2_to_L1;
 
 endpackage

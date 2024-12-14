@@ -1,0 +1,77 @@
+# vsim -c cache_design "+MODE=1" "+file_name=../t1.din" 
+# Start time: 03:33:57 on Dec 14,2024
+# ** Note: (vsim-8009) Loading existing optimized design _opt
+# //  Questa Sim-64
+# //  Version 2021.3_1 linux_x86_64 Aug 15 2021
+# //
+# //  Copyright 1991-2021 Mentor Graphics Corporation
+# //  All Rights Reserved.
+# //
+# //  QuestaSim and its associated documentation contain trade
+# //  secrets and commercial or financial information that are the property of
+# //  Mentor Graphics Corporation and are privileged, confidential,
+# //  and exempt from disclosure under the Freedom of Information Act,
+# //  5 U.S.C. Section 552. Furthermore, this information
+# //  is prohibited from disclosure under the Trade Secrets Act,
+# //  18 U.S.C. Section 1905.
+# //
+# Loading sv_std.std
+# Loading work.cache_define(fast)
+# Loading work.PrintContents(fast)
+# Loading work.UtilFunctions(fast)
+# Loading work.ResetCache(fast)
+# Loading work.SnoopWrite(fast)
+# Loading work.SnoopInvalidate(fast)
+# Loading work.SnoopRdx(fast)
+# Loading work.SnoopRd(fast)
+# Loading work.EvictPlru(fast)
+# Loading work.UpdatePlru(fast)
+# Loading work.PrWr(fast)
+# Loading work.PrRd(fast)
+# Loading work.cache_design_sv_unit(fast)
+# Loading work.cache_design(fast)
+# RUNNING IN NORMAL MODE
+# Using specified file: ../t1.din
+# OPERATION: PROCESSOR READ
+# HIT/MISS: CACHE MISS
+# BusOp: READ, Address: 00000000, Snoop Result: HIT
+# 
+# MESI State:S, TAG:000
+# PLRU = 000000000000000
+# Message to Higher Level Cache: SENDLINE 00000000
+# 
+# ++++++++++++++++++++++++++++++++++++++++++++++++++
+#  
+# OPERATION: PROCESSOR READ
+# HIT/MISS: CACHE HIT
+# MESI State:S, TAG:000
+# Message to Higher Level Cache: SENDLINE 0000003f
+# 
+# PLRU = 000000000000000
+# ++++++++++++++++++++++++++++++++++++++++++++++++++
+#  
+# Valid Lines in LLC:
+# 
+# MESI   |    TAG    |            SET     |        WAY    |
+# -------------------------------------------------------
+#  S     |    000    |              0     |          0    |
+# *********************************************************
+#             PLRU of SET 0 is 000000000000000
+# *********************************************************
+# Valid Lines in LLC:
+# 
+# MESI   |    TAG    |            SET     |        WAY    |
+# No Valid Lines in LLC
+# 
+# Valid Lines in LLC:
+# 
+# MESI   |    TAG    |            SET     |        WAY    |
+# No Valid Lines in LLC
+# 
+# CacheReads = 2
+# CacheWrites = 0
+# CacheHits = 1
+# CacheMisses = 1
+# Hit Ratio: 0.50000000000000000000000000000000
+# End time: 03:34:05 on Dec 14,2024, Elapsed time: 0:00:08
+# Errors: 0, Warnings: 0
