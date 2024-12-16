@@ -71,6 +71,8 @@ import UtilFunctions::*;
         if(mode==NormalMode)
             $display("HIT/MISS: CACHE MISS");
         WayToEvict=victim_cache(PLRU[input_index]);
+        if (cache [input_index][WayToEvict].MESI==M)
+                MessageToCache(GETLINE, Address)
         MessageToCache(EVICTLINE,Address);
         SnoopResult=GetSnoopResult(Address);
         BusOperation(READ,Address,SnoopResult);
