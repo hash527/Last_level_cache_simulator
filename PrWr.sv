@@ -71,6 +71,8 @@ package PrWr;
             if(mode==NormalMode)
                 $display("HIT/MISS: CACHE MISS");
             WayToEvict=victim_cache(PLRU[input_index]);
+            if (cache [input_index][WayToEvict].MESI==M)
+                MessageToCache(GETLINE, Address)
             MessageToCache(EVICTLINE,Address);
             BusOperation(RWIM,Address,SnoopResult);
             cache [input_index][WayToEvict].MESI=M;
