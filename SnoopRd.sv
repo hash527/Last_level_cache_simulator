@@ -14,8 +14,10 @@ package SnoopRd;
             begin
             if (cache[input_index][i].MESI==E || cache[input_index][i].MESI==S)
                 PutSnoopResult(Address, HIT);
-            else
+            else begin
                 PutSnoopResult(Address, HITM);
+                MessageToCache(GETLINE);
+            end
             cache[input_index][i].MESI=S;
             if(mode==NormalMode)
                     $display("MESI:%b", MESI_to_string(cache[input_index][i].MESI));
