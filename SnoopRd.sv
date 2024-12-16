@@ -16,7 +16,7 @@ package SnoopRd;
                 PutSnoopResult(Address, HIT);
             else begin
                 PutSnoopResult(Address, HITM);
-                MessageToCache(GETLINE);
+                MessageToCache(GETLINE, Address);
             end
             cache[input_index][i].MESI=S;
             if(mode==NormalMode)
